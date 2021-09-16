@@ -1,4 +1,5 @@
-use std::fmt;
+use specs::prelude::*;
+use specs_derive::*;
 
 pub enum HeroClass {
     Mage,
@@ -88,8 +89,9 @@ impl MonsterData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Component)]
 pub struct Monster {
+    id: i32,
     cost: i32,
     health: i32,
     damage: i32,
@@ -97,8 +99,9 @@ pub struct Monster {
 }
 
 impl Monster {
-    pub fn new(cost: i32, health: i32, damage: i32, data: MonsterData) -> Monster {
+    pub fn new(id: i32, cost: i32, health: i32, damage: i32, data: MonsterData) -> Monster {
         Monster {
+            id: id,
             cost: cost,
             health: health,
             damage: damage,
@@ -152,35 +155,51 @@ pub struct Magic {
     effect: Box<dyn FnMut()>,
 }
 
+#[derive(Component)]
 pub struct Hero {
+    id: u8,
     base_health: i32,
     health: i32,
     class: HeroClass,
 }
 
+impl Hero {
+    fn id(&self) -> u8 {
+        self.id
+    }
+}
+
+#[derive(Component)]
 pub struct Board {
+    id: u8,
     hero: Hero,
     field: [Option<Monster>; 5],
-    hand: Vec<Box<dyn Card>>,
-    deck: Vec<Box<dyn Card>>,
-    graveyard: Vec<Box<dyn Card>>,
+    hand: Vec<Box<dyn Card + Send + Sync>>,
+    deck: Vec<Box<dyn Card + Send + Sync>>,
+    graveyard: Vec<Box<dyn Card + Send + Sync>>,
 }
 
 impl Board {
     pub fn new(
+        id: u8,
         hero: Hero,
         field: [Option<Monster>; 5],
-        hand: Vec<Box<dyn Card>>,
-        deck: Vec<Box<dyn Card>>,
-        graveyard: Vec<Box<dyn Card>>,
+        hand: Vec<Box<dyn Card + Send + Sync>>,
+        deck: Vec<Box<dyn Card + Send + Sync>>,
+        graveyard: Vec<Box<dyn Card + Send + Sync>>,
     ) -> Board {
         Board {
+            id: id,
             hero: hero,
             field: field,
             hand: hand,
             deck: deck,
             graveyard: graveyard,
         }
+    }
+
+    pub fn id(&self) -> u8 {
+        self.id
     }
 
     pub fn field(&self) -> [Option<Monster>; 5] {

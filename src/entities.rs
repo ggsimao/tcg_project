@@ -39,6 +39,7 @@ pub trait Card {
     fn play_card_on_field(&self, board: &mut Board, target: usize);
     fn play_card_on_hero(&self, board: &mut Board) {}
     fn data(&self) -> Box<&dyn CardData>;
+    fn id(&self) -> u32;
 }
 
 pub trait CardData {
@@ -111,7 +112,7 @@ impl CardData for MonsterData {
 
 #[derive(Clone, Component)]
 pub struct Monster {
-    id: i32,
+    id: u32,
     cost: i32,
     health: i32,
     damage: i32,
@@ -119,7 +120,7 @@ pub struct Monster {
 }
 
 impl Monster {
-    pub fn new(id: i32, cost: i32, health: i32, damage: i32, data: MonsterData) -> Monster {
+    pub fn new(id: u32, cost: i32, health: i32, damage: i32, data: MonsterData) -> Monster {
         Monster {
             id: id,
             cost: cost,
@@ -152,6 +153,10 @@ impl Card for Monster {
     }
 
     fn play_card_on_hero(&self, board: &mut Board) {}
+
+    fn id(&self) -> u32 {
+        self.id
+    }
 }
 
 pub struct Magic {
@@ -181,6 +186,7 @@ pub struct Board {
     hand: Vec<Box<dyn Card + Send + Sync>>,
     deck: Vec<Box<dyn Card + Send + Sync>>,
     graveyard: Vec<Box<dyn Card + Send + Sync>>,
+    highlighted: i32,
 }
 
 impl Board {
@@ -199,6 +205,7 @@ impl Board {
             hand: hand,
             deck: deck,
             graveyard: graveyard,
+            highlighted: -1,
         }
     }
 
@@ -212,6 +219,10 @@ impl Board {
 
     pub fn hand(&self) -> &Vec<Box<dyn Card + Send + Sync>> {
         &self.hand
+    }
+
+    pub fn highlighted(&self) -> i32 {
+        self.highlighted
     }
 
     pub fn draw_card(&mut self) {

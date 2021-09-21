@@ -184,12 +184,19 @@ pub fn display_hand(ecs: &World, ctx: &mut Rltk) {
     let entities = ecs.fetch::<Entities>();
     let boards = ecs.read_storage::<Board>();
 
-    // TODO: IMPLEMENT SELECTED CARD IN HAND
-
-    for (entity, board) in (&entities, &boards).join().filter(|x| x.1.id() == 0) {
+    for (index, (entity, board)) in (&entities, &boards)
+        .join()
+        .filter(|x| x.1.id() == 0)
+        .enumerate()
+    {
         let mut printed = 0;
         for card in board.hand() {
-            let card_name = card.data().name();
+            let mut card_name = card.data().name();
+            if (index as i32) == board.highlighted() {
+                card_name.insert_str(0, "> ");
+                printed += 4;
+                card_name.push_str(" <");
+            }
             let printed_end = printed + &card_name.len();
             if printed_end > 80 {
                 break;

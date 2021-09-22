@@ -186,7 +186,7 @@ pub struct Board {
     hand: Vec<Box<dyn Card + Send + Sync>>,
     deck: Vec<Box<dyn Card + Send + Sync>>,
     graveyard: Vec<Box<dyn Card + Send + Sync>>,
-    highlighted: i32,
+    highlighted: (u8, i32),
 }
 
 impl Board {
@@ -205,7 +205,7 @@ impl Board {
             hand: hand,
             deck: deck,
             graveyard: graveyard,
-            highlighted: -1,
+            highlighted: (0, -1),
         }
     }
 
@@ -221,7 +221,7 @@ impl Board {
         &self.hand
     }
 
-    pub fn highlighted(&self) -> i32 {
+    pub fn highlighted(&self) -> (u8, i32) {
         self.highlighted
     }
 

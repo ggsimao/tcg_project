@@ -108,28 +108,28 @@ pub fn draw_monster(
 pub fn draw_template_highlighted_card(ctx: &mut Rltk) {
     ctx.print_color(
         0,
-        42,
+        43,
         RGB::named(rltk::WHITE),
         RGB::named(rltk::BLACK),
         "CARD: ",
     );
     ctx.print_color(
         0,
-        43,
+        44,
         RGB::named(rltk::WHITE),
         RGB::named(rltk::BLACK),
         "                                ┌───────────────┐",
     );
     ctx.print_color(
         0,
-        44,
+        45,
         RGB::named(rltk::WHITE),
         RGB::named(rltk::BLACK),
         "                                │               │",
     );
     ctx.print_color(
         0,
-        45,
+        46,
         RGB::named(rltk::WHITE),
         RGB::named(rltk::BLACK),
         "                                ├───────────────┤",
@@ -137,7 +137,7 @@ pub fn draw_template_highlighted_card(ctx: &mut Rltk) {
     for i in 0..15 {
         ctx.print_color(
             0,
-            46 + i,
+            47 + i,
             RGB::named(rltk::WHITE),
             RGB::named(rltk::BLACK),
             "                                │               │",
@@ -145,7 +145,7 @@ pub fn draw_template_highlighted_card(ctx: &mut Rltk) {
     }
     ctx.print_color(
         0,
-        61,
+        62,
         RGB::named(rltk::WHITE),
         RGB::named(rltk::BLACK),
         "                                └───────────────┘",
@@ -200,7 +200,7 @@ pub fn draw_empty_board(ctx: &mut Rltk, id: u8) {
 }
 
 pub fn display_hand(ecs: &World, ctx: &mut Rltk) {
-    let entities = ecs.fetch::<Entities>();
+    let entities = ecs.entities();
     let boards = ecs.read_storage::<Board>();
 
     for (index, (entity, board)) in (&entities, &boards)

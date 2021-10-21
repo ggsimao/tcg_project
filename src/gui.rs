@@ -203,14 +203,16 @@ pub fn display_hand(ecs: &World, ctx: &mut Rltk) {
     let entities = ecs.entities();
     let boards = ecs.read_storage::<Board>();
 
-    for (index, (entity, board)) in (&entities, &boards)
-        .join()
-        .filter(|x| x.1.id() == 0)
-        .enumerate()
+    
+    for (entity, board) in (&entities, &boards)
+    .join()
+    .filter(|x| x.1.id() == 0)
     {
         let mut printed = 0;
-        for card in board.hand() {
-            let mut card_name = card.data().name();
+        let hand = board.hand();
+        for index in 0..hand.len() {
+            let card = &hand[index];
+            let mut card_name = card.name();
             if board.highlighted().0 == 0 {
                 if (index as i32) == board.highlighted().1 {
                     card_name.insert_str(0, "> ");
@@ -224,7 +226,7 @@ pub fn display_hand(ecs: &World, ctx: &mut Rltk) {
             }
             ctx.print_color(
                 printed,
-                61,
+                63,
                 RGB::named(rltk::WHITE),
                 RGB::named(rltk::BLACK),
                 &card_name,

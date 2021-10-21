@@ -2,6 +2,7 @@ use specs::prelude::*;
 use specs_derive::*;
 use std::any;
 
+#[derive(Component)]
 pub enum HeroClass {
     Mage,
     Warrior,
@@ -9,6 +10,54 @@ pub enum HeroClass {
     Rogue,
     Priest,
 }
+
+#[derive(Component)]
+pub enum  CardHolder {
+    MonsterCard(Monster ),
+    MagicCard(Magic ),
+}
+
+impl  CardHolder {
+    pub fn name(&self) -> String {
+        match self {
+             CardHolder::MonsterCard(c) => c.data().name(),
+             CardHolder::MagicCard(c) => c.data().name(),
+            _ => {
+                panic!("Invalid card type!");
+            },
+        }
+    }
+}
+
+// impl Iterator for  CardHolder {
+//     // we will be counting with usize
+//     type Item = usize;
+
+//     // next() is the only required method
+//     fn next(&mut self) -> Option<Self::Item> {
+//         // Increment our count. This is why we started at zero.
+//         self.count += 1;
+
+//         // Check to see if we've finished counting or not.
+//         if self.count < 6 {
+//             Some(self.count)
+//         } else {
+//             None
+//         }
+//     }
+// }
+
+
+// pub impl  CardHolder {
+//     pub fn play_card_on_field(&self, board: &mut Board, target: usize) {
+//         match self {
+//             _(x) => 
+//         }
+//     }
+//     fn play_card_on_hero(&self, board: &mut Board) {}
+//     fn data(&self) -> Box<&dyn CardData>;
+//     fn id(&self) -> u32;
+// }
 
 pub enum Target {
     Friendly(TargetType),
@@ -36,7 +85,7 @@ pub enum MagicSchool {
 }
 
 pub trait Card {
-    fn play_card_on_field(&self, board: &mut Board, target: usize);
+    fn play_card_on_field(&self, board: &mut Board, target: usize) {}
     fn play_card_on_hero(&self, board: &mut Board) {}
     fn data(&self) -> Box<&dyn CardData>;
     fn id(&self) -> u32;
@@ -46,10 +95,20 @@ pub trait CardData {
     fn name(&self) -> String {
         String::new()
     }
-    fn as_monster(&self) -> Option<&MonsterData>;
+    fn as_monster(&self) -> Option<&MonsterData> {
+        None
+    }
+    fn as_magic(&self) -> Option<&MagicData> {
+        None
+    }
 }
 
-pub trait Effect {}
+#[derive(Component)]
+pub struct Effect {
+    source:  CardHolder ,
+    targets: Vec< CardHolder>,
+    effect: fn(usize)
+}
 
 #[derive(Clone)]
 pub struct MonsterData {
@@ -120,12 +179,12 @@ pub struct Monster {
 }
 
 impl Monster {
-    pub fn new(id: u32, cost: i32, health: i32, damage: i32, data: MonsterData) -> Monster {
+    pub fn new (id: u32, data: MonsterData) -> Monster {
         Monster {
             id: id,
-            cost: cost,
-            health: health,
-            damage: damage,
+            cost: data.base_cost(),
+            health: data.base_health(),
+            damage: data.base_damage(),
             data: data,
         }
     }
@@ -159,9 +218,40 @@ impl Card for Monster {
     }
 }
 
+#[derive(Component)]
 pub struct Magic {
+    id: u32,
     cost: i32,
-    effect: Box<dyn FnMut()>,
+    data: MagicData ,
+}
+
+impl Card for Magic {
+    fn data(&self) -> Box<&dyn CardData> {
+        Box::new(&self.data)
+    }
+
+    fn play_card_on_hero(&self, board: &mut Board) {}
+
+    fn id(&self) -> u32 {
+        self.id
+    }
+}
+
+#[derive(Component)]
+pub struct MagicData {
+    name: String,
+    base_cost: i32,
+    effect: Box<Effect>
+}
+
+impl CardData for MagicData {
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn as_magic(&self) -> Option<&MagicData> {
+        Some(self)
+    }
 }
 
 #[derive(Component)]
@@ -173,6 +263,20 @@ pub struct Hero {
 }
 
 impl Hero {
+    pub fn new(
+        id: u8,
+        base_health: i32,
+        health: i32,
+        class: HeroClass
+    ) -> Hero {
+        Hero {
+            id: id,
+            base_health: base_health,
+            health: health,
+            class: class
+        }
+    }
+
     fn id(&self) -> u8 {
         self.id
     }
@@ -183,30 +287,40 @@ pub struct Board {
     id: u8,
     hero: Hero,
     field: [Option<Monster>; 5],
-    hand: Vec<Box<dyn Card + Send + Sync>>,
-    deck: Vec<Box<dyn Card + Send + Sync>>,
-    graveyard: Vec<Box<dyn Card + Send + Sync>>,
+    hand: Vec< CardHolder>,
+    deck: Vec< CardHolder>,
+    graveyard: Vec< CardHolder>,
     highlighted: (u8, i32),
 }
 
 impl Board {
-    pub fn new(
+    pub fn new (
         id: u8,
         hero: Hero,
-        field: [Option<Monster>; 5],
-        hand: Vec<Box<dyn Card + Send + Sync>>,
-        deck: Vec<Box<dyn Card + Send + Sync>>,
-        graveyard: Vec<Box<dyn Card + Send + Sync>>,
+        deck: Vec< CardHolder>,
     ) -> Board {
-        Board {
+        let mut ret = Board {
             id: id,
             hero: hero,
-            field: field,
-            hand: hand,
+            field: [None, None, None, None, None],
+            hand: vec!(),
             deck: deck,
-            graveyard: graveyard,
-            highlighted: (0, -1),
-        }
+            graveyard: vec!(),
+            highlighted: (0, 0),
+        };
+
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+        ret.draw_card();
+
+        ret
     }
 
     pub fn id(&self) -> u8 {
@@ -217,7 +331,7 @@ impl Board {
         self.field.clone()
     }
 
-    pub fn hand(&self) -> &Vec<Box<dyn Card + Send + Sync>> {
+    pub fn hand(&self) -> &Vec< CardHolder> {
         &self.hand
     }
 
@@ -232,7 +346,7 @@ impl Board {
         }
     }
 
-    pub fn play_card(&mut self, card: usize, target: Target) -> Option<Box<dyn Card>> {
+    pub fn play_card(&mut self, card: usize, target: Target) -> Option< CardHolder> {
         match target {
             Target::Friendly(x) => match x {
                 TargetType::Hero => None,
@@ -240,8 +354,9 @@ impl Board {
                     let field_slot = self.field[i].clone();
                     match field_slot {
                         None => {
-                            let chosen_card = &self.hand.remove(card);
-                            chosen_card.play_card_on_field(self, i);
+                            if let  CardHolder::MonsterCard(chosen_card) = &self.hand.remove(card) {
+                                chosen_card.play_card_on_field(self, i);
+                            }
                             None
                         }
                         Some(_) => None,
@@ -254,6 +369,25 @@ impl Board {
 
     pub fn count_deck_size(&self) -> usize {
         self.deck.len()
+    }
+}
+
+#[derive(Component)]
+pub struct Game {
+    players: (Board, Board),
+    turns: u32,
+}
+
+impl Game {
+    pub fn new(player1: Board, player2: Board) -> Self {
+        Game {
+            players: (player1, player2),
+            turns: 0
+        }
+    }
+
+    pub fn players(&self) -> &(Board, Board) {
+        &self.players
     }
 }
 

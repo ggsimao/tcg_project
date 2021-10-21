@@ -1,7 +1,7 @@
 use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
 
-use entities::{Board, Hero, Monster};
+use entities::{Board, Hero, Monster, HeroClass, CardHolder, Game, MonsterData};
 
 mod card_data;
 mod entities;
@@ -49,8 +49,36 @@ fn main() -> rltk::BError {
     // gs.ecs.register::<SimpleMarker<SerializeMe>>();
     // gs.ecs.register::<SerializationHelper>();
 
-    // gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
-
+    card_data::initialize_card_data(&mut gs.ecs);
+    let hero1 = Hero::new(0, 30, 30, HeroClass::Mage);
+    let hero2 = Hero::new(0, 30, 30, HeroClass::Mage);
+    let mut deck1 = vec!();
+    let mut deck2 = vec!();
+    {
+        let monster_data = gs.ecs.entry::<Vec<MonsterData>>().or_insert(vec!());
+        
+        // gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
+        let mut id = 0;
+        {
+            for i in 0..30 {
+                let orc =  CardHolder::MonsterCard(Monster::new(id, (&monster_data[0]).clone()));
+                let wisp =  CardHolder::MonsterCard(Monster::new(id+30, (&monster_data[1]).clone()));
+                deck1.push(orc);
+                deck2.push(wisp);
+                id+=1;
+            }
+        }
+    }
+    let board1 = Board::new(0, hero1, deck1);
+    let board2 = Board::new(1, hero2, deck2);
+    {
+        gs.ecs.create_entity().with(board1).build();
+    }
+    {
+        gs.ecs.create_entity().with(board2).build();
+    }
+    // gs.ecs.insert(Game::new(board1, board2));
+    
     // let map: Map = Map::new_map_rooms_and_corridors();
     // let (player_x, player_y) = map.rooms[0].center();
 

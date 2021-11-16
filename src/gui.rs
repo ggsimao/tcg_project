@@ -203,35 +203,31 @@ pub fn display_hand(ecs: &World, ctx: &mut Rltk) {
     let entities = ecs.entities();
     let boards = ecs.read_storage::<Board>();
 
-    
-    for (entity, board) in (&entities, &boards)
-    .join()
-    .filter(|x| x.1.id() == 0)
-    {
-        let mut printed = 0;
+    for (entity, board) in (&entities, &boards).join().filter(|x| x.1.id() == 0) {
+        let mut printed_now = 0;
+        let mut printed_next = 0;
         let hand = board.hand();
         for index in 0..hand.len() {
             let card = &hand[index];
             let mut card_name = card.name();
-            if board.highlighted().0 == 0 {
+            if board.highlighted().0 == 2 {
                 if (index as i32) == board.highlighted().1 {
                     card_name.insert_str(0, "> ");
-                    printed += 4;
                     card_name.push_str(" <");
                 }
             }
-            let printed_end = printed + &card_name.len();
-            if printed_end > 80 {
-                break;
-            }
             ctx.print_color(
-                printed,
+                printed_now,
                 63,
                 RGB::named(rltk::WHITE),
                 RGB::named(rltk::BLACK),
                 &card_name,
             );
-            printed = printed_end + 1;
+            printed_next += card_name.len() as u32 + 2;
+            if printed_next > 80 {
+                break;
+            }
+            printed_now = printed_next;
         }
     }
 }

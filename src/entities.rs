@@ -12,19 +12,19 @@ pub enum HeroClass {
 }
 
 #[derive(Component)]
-pub enum  CardHolder {
-    MonsterCard(Monster ),
-    MagicCard(Magic ),
+pub enum CardHolder {
+    MonsterCard(Monster),
+    MagicCard(Magic),
 }
 
-impl  CardHolder {
+impl CardHolder {
     pub fn name(&self) -> String {
         match self {
-             CardHolder::MonsterCard(c) => c.data().name(),
-             CardHolder::MagicCard(c) => c.data().name(),
+            CardHolder::MonsterCard(c) => c.data().name(),
+            CardHolder::MagicCard(c) => c.data().name(),
             _ => {
                 panic!("Invalid card type!");
-            },
+            }
         }
     }
 }
@@ -47,11 +47,10 @@ impl  CardHolder {
 //     }
 // }
 
-
 // pub impl  CardHolder {
 //     pub fn play_card_on_field(&self, board: &mut Board, target: usize) {
 //         match self {
-//             _(x) => 
+//             _(x) =>
 //         }
 //     }
 //     fn play_card_on_hero(&self, board: &mut Board) {}
@@ -105,9 +104,9 @@ pub trait CardData {
 
 #[derive(Component)]
 pub struct Effect {
-    source:  CardHolder ,
-    targets: Vec< CardHolder>,
-    effect: fn(usize)
+    source: CardHolder,
+    targets: Vec<CardHolder>,
+    effect: fn(usize),
 }
 
 #[derive(Clone)]
@@ -179,7 +178,7 @@ pub struct Monster {
 }
 
 impl Monster {
-    pub fn new (id: u32, data: MonsterData) -> Monster {
+    pub fn new(id: u32, data: MonsterData) -> Monster {
         Monster {
             id: id,
             cost: data.base_cost(),
@@ -222,7 +221,7 @@ impl Card for Monster {
 pub struct Magic {
     id: u32,
     cost: i32,
-    data: MagicData ,
+    data: MagicData,
 }
 
 impl Card for Magic {
@@ -241,7 +240,7 @@ impl Card for Magic {
 pub struct MagicData {
     name: String,
     base_cost: i32,
-    effect: Box<Effect>
+    effect: Box<Effect>,
 }
 
 impl CardData for MagicData {
@@ -263,17 +262,12 @@ pub struct Hero {
 }
 
 impl Hero {
-    pub fn new(
-        id: u8,
-        base_health: i32,
-        health: i32,
-        class: HeroClass
-    ) -> Hero {
+    pub fn new(id: u8, base_health: i32, health: i32, class: HeroClass) -> Hero {
         Hero {
             id: id,
             base_health: base_health,
             health: health,
-            class: class
+            class: class,
         }
     }
 
@@ -287,38 +281,23 @@ pub struct Board {
     id: u8,
     hero: Hero,
     field: [Option<Monster>; 5],
-    hand: Vec< CardHolder>,
-    deck: Vec< CardHolder>,
-    graveyard: Vec< CardHolder>,
+    hand: Vec<CardHolder>,
+    deck: Vec<CardHolder>,
+    graveyard: Vec<CardHolder>,
     highlighted: (u8, i32),
 }
 
 impl Board {
-    pub fn new (
-        id: u8,
-        hero: Hero,
-        deck: Vec< CardHolder>,
-    ) -> Board {
+    pub fn new(id: u8, hero: Hero, deck: Vec<CardHolder>) -> Board {
         let mut ret = Board {
             id: id,
             hero: hero,
             field: [None, None, None, None, None],
-            hand: vec!(),
+            hand: vec![],
             deck: deck,
-            graveyard: vec!(),
-            highlighted: (0, 0),
+            graveyard: vec![],
+            highlighted: (2, 0),
         };
-
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
-        ret.draw_card();
 
         ret
     }
@@ -331,12 +310,16 @@ impl Board {
         self.field.clone()
     }
 
-    pub fn hand(&self) -> &Vec< CardHolder> {
+    pub fn hand(&self) -> &Vec<CardHolder> {
         &self.hand
     }
 
     pub fn highlighted(&self) -> (u8, i32) {
         self.highlighted
+    }
+
+    pub fn change_highlighted(&mut self, new_highlighted: (u8, i32)) {
+        self.highlighted = new_highlighted;
     }
 
     pub fn draw_card(&mut self) {
@@ -346,7 +329,7 @@ impl Board {
         }
     }
 
-    pub fn play_card(&mut self, card: usize, target: Target) -> Option< CardHolder> {
+    pub fn play_card(&mut self, card: usize, target: Target) -> Option<CardHolder> {
         match target {
             Target::Friendly(x) => match x {
                 TargetType::Hero => None,
@@ -354,7 +337,7 @@ impl Board {
                     let field_slot = self.field[i].clone();
                     match field_slot {
                         None => {
-                            if let  CardHolder::MonsterCard(chosen_card) = &self.hand.remove(card) {
+                            if let CardHolder::MonsterCard(chosen_card) = &self.hand.remove(card) {
                                 chosen_card.play_card_on_field(self, i);
                             }
                             None
@@ -382,7 +365,7 @@ impl Game {
     pub fn new(player1: Board, player2: Board) -> Self {
         Game {
             players: (player1, player2),
-            turns: 0
+            turns: 0,
         }
     }
 

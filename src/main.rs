@@ -1,12 +1,18 @@
 use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
 
-use entities::{Board, Hero, Monster, HeroClass, CardHolder, Game, MonsterData};
+use entities::{Board, CardHolder, Game, Hero, HeroClass, Monster, MonsterData};
 
 mod card_data;
 mod entities;
 mod gui;
 mod match_cycle;
+mod player_system;
+
+pub enum Command {
+    ChooseSource(String),
+    ChooseTarget(String),
+}
 
 pub struct State {
     pub ecs: World,
@@ -25,11 +31,13 @@ impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        gui::draw_empty_board(ctx, 0);
-        gui::draw_empty_board(ctx, 1);
+        gui::draw_empty_board(&self.ecs, ctx, 0);
+        gui::draw_empty_board(&self.ecs, ctx, 1);
         gui::draw_template_highlighted_card(ctx);
         gui::draw_filled_board(&self.ecs, ctx);
         gui::display_hand(&self.ecs, ctx);
+
+        player_system::player_input(&mut self.ecs, ctx);
     }
 }
 
@@ -52,20 +60,21 @@ fn main() -> rltk::BError {
     card_data::initialize_card_data(&mut gs.ecs);
     let hero1 = Hero::new(0, 30, 30, HeroClass::Mage);
     let hero2 = Hero::new(0, 30, 30, HeroClass::Mage);
-    let mut deck1 = vec!();
-    let mut deck2 = vec!();
+    let mut deck1 = vec![];
+    let mut deck2 = vec![];
     {
-        let monster_data = gs.ecs.entry::<Vec<MonsterData>>().or_insert(vec!());
-        
+        let monster_data = gs.ecs.entry::<Vec<MonsterData>>().or_insert(vec![]);
+
         // gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
         let mut id = 0;
         {
-            for i in 0..30 {
-                let orc =  CardHolder::MonsterCard(Monster::new(id, (&monster_data[0]).clone()));
-                let wisp =  CardHolder::MonsterCard(Monster::new(id+30, (&monster_data[1]).clone()));
+            for _ in 0..30 {
+                let orc = CardHolder::MonsterCard(Monster::new(id, (&monster_data[0]).clone()));
+                let wisp =
+                    CardHolder::MonsterCard(Monster::new(id + 30, (&monster_data[1]).clone()));
                 deck1.push(orc);
                 deck2.push(wisp);
-                id+=1;
+                id += 1;
             }
         }
     }
@@ -77,8 +86,9 @@ fn main() -> rltk::BError {
     {
         gs.ecs.create_entity().with(board2).build();
     }
+    match_cycle::pre_game(&gs.ecs);
     // gs.ecs.insert(Game::new(board1, board2));
-    
+
     // let map: Map = Map::new_map_rooms_and_corridors();
     // let (player_x, player_y) = map.rooms[0].center();
 

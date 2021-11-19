@@ -1,9 +1,15 @@
 use super::entities::{DamageType, MagicSchool, MonsterData};
-use DamageType::*;
 use MagicSchool::*;
+use specs::prelude::*;
 
-fn initialize_card_data() {
-    let wisp = MonsterData::new(String::from("Wisp"), 1, 1, 1, Magical(Flame));
+pub fn initialize_card_data(ecs: &mut World) {
+    let mut monsters: Vec<MonsterData> = Vec::<MonsterData>::new();
 
-    let orc_grunt = MonsterData::new(String::from("Orc Grunt"), 3, 3, 3, Physical(0));
+    let wisp = MonsterData::new(String::from("Wisp"), 1, 1, 1, DamageType::new(0, Flame));
+    let orc_grunt = MonsterData::new(String::from("Orc Grunt"), 3, 3, 3, DamageType::new(0, Physical));
+
+    monsters.push(wisp);
+    monsters.push(orc_grunt);
+
+    ecs.insert(monsters);
 }

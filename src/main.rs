@@ -33,7 +33,6 @@ impl GameState for State {
 
         gui::draw_empty_board(&self.ecs, ctx, 0);
         gui::draw_empty_board(&self.ecs, ctx, 1);
-        gui::draw_template_highlighted_card(ctx);
         gui::draw_filled_board(&self.ecs, ctx);
         gui::display_hand(&self.ecs, ctx);
 

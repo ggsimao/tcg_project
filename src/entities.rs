@@ -69,13 +69,69 @@ pub enum TargetType {
 }
 
 #[derive(Copy, Clone)]
-pub enum DamageType {
-    Physical(i32),
-    Magical(MagicSchool),
+pub struct DamageType {
+    range: u32,
+    school: MagicSchool,
+}
+
+impl DamageType {
+    pub fn new(range: u32, school: MagicSchool) -> DamageType {
+        DamageType {range, school}
+    }
+
+    pub fn name(&self) -> String {
+        let typename: String = match self.school {
+            MagicSchool::Physical => {
+                "PHYS.".to_string()
+            }
+            MagicSchool::Flame => {
+                "FLAME".to_string()
+            },
+            MagicSchool::Frost => {
+                "FROST".to_string()
+            },
+            MagicSchool::Lightning => {
+                "LIGHTN.".to_string()
+            },
+            MagicSchool::Shadow => {
+                "SHADOW".to_string()
+            },
+            MagicSchool::Light => {
+                "LIGHT".to_string()
+            },
+            _ => {"".to_string()}
+        };
+        format!("{}R {}", self.range, typename)
+    }
+
+    pub fn color(&self) -> (u8, u8, u8) {
+        match self.school {
+            MagicSchool::Physical => {
+                (255, 255, 255)
+            }
+            MagicSchool::Flame => {
+                (255, 140, 0)
+            },
+            MagicSchool::Frost => {
+                (0, 128, 128)
+            },
+            MagicSchool::Lightning => {
+                (0, 0, 139)
+            },
+            MagicSchool::Shadow => {
+                (128, 0, 128)
+            },
+            MagicSchool::Light => {
+                (250, 250, 210)
+            },
+            _ => {(0, 0, 0)}
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
 pub enum MagicSchool {
+    Physical,
     Flame,
     Frost,
     Lightning,

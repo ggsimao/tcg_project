@@ -27,6 +27,16 @@ impl CardHolder {
             }
         }
     }
+
+    pub fn hidden(&self) -> bool {
+        match self {
+            CardHolder::MonsterCard(c) => c.hidden(),
+            CardHolder::MagicCard(c) => c.hidden(),
+            _ => {
+                panic!("Invalid card type!");
+            }
+        }
+    }
 }
 
 // impl Iterator for  CardHolder {
@@ -144,6 +154,7 @@ pub trait Card {
     fn play_card_on_hero(&self, board: &mut Board) {}
     fn data(&self) -> Box<&dyn CardData>;
     fn id(&self) -> u32;
+    fn hidden(&self) -> bool;
 }
 
 pub trait CardData {
@@ -231,6 +242,7 @@ pub struct Monster {
     health: i32,
     damage: i32,
     data: MonsterData,
+    hidden: bool,
 }
 
 impl Monster {
@@ -241,6 +253,7 @@ impl Monster {
             health: data.base_health(),
             damage: data.base_damage(),
             data: data,
+            hidden: true,
         }
     }
 
@@ -271,6 +284,10 @@ impl Card for Monster {
     fn id(&self) -> u32 {
         self.id
     }
+
+    fn hidden(&self) -> bool {
+        self.hidden
+    }
 }
 
 #[derive(Component)]
@@ -278,6 +295,7 @@ pub struct Magic {
     id: u32,
     cost: i32,
     data: MagicData,
+    hidden: bool,
 }
 
 impl Card for Magic {
@@ -289,6 +307,10 @@ impl Card for Magic {
 
     fn id(&self) -> u32 {
         self.id
+    }
+
+    fn hidden(&self) -> bool {
+        self.hidden
     }
 }
 
@@ -352,7 +374,7 @@ impl Board {
             hand: vec![],
             deck: deck,
             graveyard: vec![],
-            highlighted: (2, 0),
+            highlighted: (3, 0),
         };
 
         ret

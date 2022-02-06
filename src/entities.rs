@@ -37,6 +37,15 @@ impl CardHolder {
             }
         }
     }
+    pub fn reveal(&mut self) -> () {
+        match self {
+            CardHolder::MonsterCard(c) => c.reveal(),
+            CardHolder::MagicCard(c) => c.reveal(),
+            _ => {
+                panic!("Invalid card type!");
+            }
+        }
+    }
 }
 
 // impl Iterator for  CardHolder {
@@ -86,55 +95,31 @@ pub struct DamageType {
 
 impl DamageType {
     pub fn new(range: u32, school: MagicSchool) -> DamageType {
-        DamageType {range, school}
+        DamageType { range, school }
     }
 
     pub fn name(&self) -> String {
         let typename: String = match self.school {
-            MagicSchool::Physical => {
-                "PHYS.".to_string()
-            }
-            MagicSchool::Flame => {
-                "FLAME".to_string()
-            },
-            MagicSchool::Frost => {
-                "FROST".to_string()
-            },
-            MagicSchool::Lightning => {
-                "LIGHTN.".to_string()
-            },
-            MagicSchool::Shadow => {
-                "SHADOW".to_string()
-            },
-            MagicSchool::Light => {
-                "LIGHT".to_string()
-            },
-            _ => {"".to_string()}
+            MagicSchool::Physical => "PHYS.".to_string(),
+            MagicSchool::Flame => "FLAME".to_string(),
+            MagicSchool::Frost => "FROST".to_string(),
+            MagicSchool::Lightning => "LIGHTN.".to_string(),
+            MagicSchool::Shadow => "SHADOW".to_string(),
+            MagicSchool::Light => "LIGHT".to_string(),
+            _ => "".to_string(),
         };
         format!("{}R {}", self.range, typename)
     }
 
     pub fn color(&self) -> (u8, u8, u8) {
         match self.school {
-            MagicSchool::Physical => {
-                (255, 255, 255)
-            }
-            MagicSchool::Flame => {
-                (255, 140, 0)
-            },
-            MagicSchool::Frost => {
-                (0, 128, 128)
-            },
-            MagicSchool::Lightning => {
-                (0, 0, 139)
-            },
-            MagicSchool::Shadow => {
-                (128, 0, 128)
-            },
-            MagicSchool::Light => {
-                (250, 250, 210)
-            },
-            _ => {(0, 0, 0)}
+            MagicSchool::Physical => (255, 255, 255),
+            MagicSchool::Flame => (255, 140, 0),
+            MagicSchool::Frost => (0, 128, 128),
+            MagicSchool::Lightning => (0, 0, 139),
+            MagicSchool::Shadow => (128, 0, 128),
+            MagicSchool::Light => (250, 250, 210),
+            _ => (0, 0, 0),
         }
     }
 }
@@ -155,6 +140,7 @@ pub trait Card {
     fn data(&self) -> Box<&dyn CardData>;
     fn id(&self) -> u32;
     fn hidden(&self) -> bool;
+    fn reveal(&mut self) -> ();
 }
 
 pub trait CardData {
@@ -288,6 +274,10 @@ impl Card for Monster {
     fn hidden(&self) -> bool {
         self.hidden
     }
+
+    fn reveal(&mut self) -> () {
+        self.hidden = false;
+    }
 }
 
 #[derive(Component)]
@@ -311,6 +301,10 @@ impl Card for Magic {
 
     fn hidden(&self) -> bool {
         self.hidden
+    }
+
+    fn reveal(&mut self) -> () {
+        self.hidden = false;
     }
 }
 
@@ -402,7 +396,12 @@ impl Board {
 
     pub fn draw_card(&mut self) {
         match self.deck.pop() {
-            Some(x) => self.hand.push(x),
+            Some(mut x) => {
+                if self.id == 0 {
+                    x.reveal();
+                }
+                self.hand.push(x)
+            }
             _ => {}
         }
     }

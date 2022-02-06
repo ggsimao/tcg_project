@@ -9,3 +9,4 @@ edition = "2018"
 rltk = { version = "0.8.0", features = ["serde"] }
 specs = { version = "0.16.1", features = ["serde"] }
 specs-derive = "0.4.1"
+rand = "0.8.4"

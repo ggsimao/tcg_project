@@ -1604,6 +1604,7 @@ dependencies = [
 name = "tcg_project"
 version = "0.1.0"
 dependencies = [
+ "rand",
  "rltk",
  "specs",
  "specs-derive",

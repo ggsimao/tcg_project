@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
 
@@ -68,11 +69,29 @@ fn main() -> rltk::BError {
         let mut id = 0;
         {
             for _ in 0..30 {
-                let orc = CardHolder::MonsterCard(Monster::new(id, (&monster_data[0]).clone()));
-                let wisp =
+                let orc1 = CardHolder::MonsterCard(Monster::new(id, (&monster_data[0]).clone()));
+                let orc2 = CardHolder::MonsterCard(Monster::new(id, (&monster_data[0]).clone()));
+                let wisp1 =
                     CardHolder::MonsterCard(Monster::new(id + 30, (&monster_data[1]).clone()));
-                deck1.push(orc);
-                deck2.push(wisp);
+                let wisp2 =
+                    CardHolder::MonsterCard(Monster::new(id + 30, (&monster_data[1]).clone()));
+
+                let mut rng = rand::thread_rng();
+
+                let n1: u8 = rng.gen();
+                let n2: u8 = rng.gen();
+
+                if n1 % 2 == 0 {
+                    deck1.push(orc1);
+                } else {
+                    deck1.push(wisp1);
+                }
+                if n2 % 2 == 0 {
+                    deck2.push(orc2);
+                } else {
+                    deck2.push(wisp2);
+                }
+
                 id += 1;
             }
         }

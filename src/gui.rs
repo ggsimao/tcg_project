@@ -33,9 +33,7 @@ pub fn draw_filled_board(ecs: &World, ctx: &mut Rltk) {
         let mut hori_pos: u8 = 0;
         for slot in board.field() {
             match slot {
-                Some(monster) => {
-                    draw_monster(ctx, &monster, vert_pos as u8, hori_pos)
-                }
+                Some(monster) => draw_monster(ctx, &monster, vert_pos as u8, hori_pos),
                 None => {}
             }
             hori_pos += 1;
@@ -43,12 +41,27 @@ pub fn draw_filled_board(ecs: &World, ctx: &mut Rltk) {
     }
 }
 
-pub fn draw_monster(
-    ctx: &mut Rltk,
-    monster: &Monster,
-    vert_pos: u8,
-    hori_pos: u8
-) {
+pub fn draw_hidden(ctx: &mut Rltk, vert_pos: u8, hori_pos: u8) {
+    assert!(vert_pos <= 2);
+    assert!(hori_pos <= 4);
+    assert!(vert_pos != 2 || hori_pos == 2);
+    let calculated_vert_post = match vert_pos {
+        0 => ENEMY_BOARD + 2,
+        1 => PLAYER_BOARD + 1,
+        2 => HIGHLIGHTED_CARD + 1,
+        _ => 0,
+    };
+
+    ctx.print_color(
+        1 + CARD_WIDTH * hori_pos,
+        calculated_vert_post,
+        RGB::named(rltk::WHITE),
+        RGB::named(rltk::BLACK),
+        "Card",
+    );
+}
+
+pub fn draw_monster(ctx: &mut Rltk, monster: &Monster, vert_pos: u8, hori_pos: u8) {
     assert!(vert_pos <= 2);
     assert!(hori_pos <= 4);
     assert!(vert_pos != 2 || hori_pos == 2);
@@ -91,7 +104,11 @@ pub fn draw_monster(
         );
         offset += 1;
 
-        let damage_string = format!("{}, {}", monster.damage(), monster_data.attack_type().name());
+        let damage_string = format!(
+            "{}, {}",
+            monster.damage(),
+            monster_data.attack_type().name()
+        );
         ctx.print_color(
             1 + CARD_WIDTH * hori_pos,
             calculated_vert_post + offset,
@@ -148,9 +165,14 @@ pub fn draw_highlighted_card(ctx: &mut Rltk, board: &Board) {
     let highlighted = board.highlighted();
 
     let hand = board.hand();
-    match &hand[highlighted.1 as usize] {
-        CardHolder::MonsterCard(m) => draw_monster(ctx, m, 2, 2),
-        _ => {}
+    let c = &hand[highlighted.1 as usize];
+    if c.hidden() {
+        draw_hidden(ctx, 2, 2)
+    } else {
+        match c {
+            CardHolder::MonsterCard(m) => draw_monster(ctx, m, 2, 2),
+            _ => {}
+        }
     }
 }
 
@@ -227,7 +249,7 @@ pub fn draw_empty_board(ecs: &World, ctx: &mut Rltk, id: u8) {
                         "A",
                     );
                 }
-            },
+            }
             2 => {
                 if id == 0 {
                     ctx.print_color(
@@ -238,38 +260,46 @@ pub fn draw_empty_board(ecs: &World, ctx: &mut Rltk, id: u8) {
                         "A",
                     );
                 }
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
-
 }
 
 pub fn display_hand(ecs: &World, ctx: &mut Rltk) {
     let entities = ecs.entities();
     let boards = ecs.read_storage::<Board>();
+    let player1_highlighted = boards
+        .get(entities.entity(0))
+        .expect("No players")
+        .highlighted();
 
     for (entity, board) in (&entities, &boards).join() {
         let mut printed_now = 0;
         let mut printed_next = 0;
         let hand = board.hand();
         let id = board.id();
+        let hand_index: u8 = match id {
+            0 => 3,
+            1 => 0,
+            _ => 4,
+        };
         let y = match id {
             1 => ENEMY_HAND,
             0 => PLAYER_HAND,
             _ => 0,
         };
-        
+
         for index in 0..hand.len() {
             let card = &hand[index];
             let mut card_name: String;
-            if id == 0 || !card.hidden() {
-                card_name = card.name();
-            } else {
+            if card.hidden() {
                 card_name = format!("Card");
+            } else {
+                card_name = card.name();
             }
-            if board.id() == 0 && board.highlighted().0 == PLAYER_HAND_HIGHLIGHT_INDEX {
-                if (index as i32) == board.highlighted().1 {
+            if (hand_index, index as i32) == player1_highlighted {
+                if (index as i32) == player1_highlighted.1 {
                     card_name.insert_str(0, "> ");
                     card_name.push_str(" <");
                 }
